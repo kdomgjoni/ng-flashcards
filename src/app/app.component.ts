@@ -1,7 +1,8 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, ViewChild, OnDestroy, OnInit } from '@angular/core';
 import { IFlash } from './flash.model';
 import { NgForm } from '@angular/forms';
 import { FlashService } from './flash.service';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-root',
@@ -11,7 +12,7 @@ import { FlashService } from './flash.service';
 
 
 
-export class AppComponent {
+export class AppComponent implements OnInit, OnDestroy {
   @ViewChild('flashForm', { static: false }) flashForm: NgForm;
 
   flash = {
@@ -22,6 +23,9 @@ export class AppComponent {
   editing = false;
   editingId: number;
   flashs;
+  subscription: any;
+
+  flash$: Observable<IFlash[]>
 
   constructor(private flashService: FlashService) {
     this.flashs = this.flashService.flashs;
@@ -63,7 +67,7 @@ export class AppComponent {
     this.flashForm.reset();
   }
 
-  handleEdit(id: number):void{
+  handleEdit(id: number): void {
     this.flash = this.flashService.getFlash(id);
     this.editing = true;
     this.editingId = id;
@@ -78,5 +82,23 @@ export class AppComponent {
     this.editingId = undefined;
     this.handleClear();
   }
+
+  ngOnInit() {
+    this.flash$ = this.flashService.flashs$
+
+    this.subscription = this.flashService.flashs$.subscribe(flashs => {
+      this.flashs = flashs;
+    });
+
+
+  }
+
+  ngOnDestroy() {
+    if (this.subscription) {
+      this.subscription.unsubscribe();
+    }
+  }
+
+
 
 }
